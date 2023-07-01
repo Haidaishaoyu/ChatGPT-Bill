@@ -451,7 +451,7 @@
                 const setiddata = await response.json();
                 let setid = '';
                 if (typeof setiddata.data[1] !== 'undefined') {
-                    setid = setiddata.data[0].id + '——&——' + setiddata.data[1].id;
+                    setid = setiddata.data[0].id + ' & ' + setiddata.data[1].id;
                 } else {
                     setid = setiddata.data[0].id;
                 }
@@ -515,6 +515,7 @@
             queryButton.textContent = "查询中...";
 
             let completedQueries = 0;
+            let errorCount = 0;
 
             for (let i = 0; i < apiKeys.length; i++) {
                 const apiKey = apiKeys[i].trim();
@@ -544,6 +545,7 @@
                             errorMessageCell.classList.add("status-error");
                             errorMessageCell.textContent = "不正确或已失效的API-KEY";
                             row.appendChild(errorMessageCell);
+                            errorCount++;
                         } else {
                             const totalGrantedCell = document.createElement("td");
                             totalGrantedCell.textContent = data[0].toFixed(2);
@@ -596,6 +598,9 @@
                             queriedApiKeys = [];
                             queryButton.disabled = false;
                             queryButton.textContent = "查询";
+                            if (errorCount === apiKeys.length) {
+                                alert("所有API-KEY均不正确或已失效，请检查输入内容");
+                            }
                         }
                         serialNumber++;
                         h2.style.display = 'block';
@@ -628,22 +633,21 @@
                             queriedApiKeys = [];
                             queryButton.disabled = false;
                             queryButton.textContent = "查询";
+                            if (errorCount === apiKeys.length) {
+                                alert("所有API-KEY均不正确或已失效，请检查输入内容");
+                            }
                         }
                         serialNumber++;
                     })
                     .finally(() => {
-                        completedQueries++;
                         if (completedQueries === apiKeys.length) {
                             queriedApiKeys = [];
                             queryButton.disabled = false;
                             queryButton.textContent = "查询";
                         }
-                        serialNumber++;
                     });
             }
         }
-
-
 
         let apiUrlSelect = document.getElementById("api-url-select");
         let customUrlInput = document.getElementById("custom-url-input");
