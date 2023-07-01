@@ -356,7 +356,7 @@
         <!-- 自定义API链接输入框 -->
         <input type="text" id="custom-url-input" placeholder="输入自定义API，默认使用 https 协议" />
     </div>
-    <button :class="{ loading }" :disabled="loading" onclick="sendRequest()">查询</button> </p>
+    <button id="query-button" onclick="sendRequest()">查询</button> </p>
     </div>
     <h2 id="result-head" style="visibility:hidden">查询结果</h2>
     <table id="result-table" style="visibility:hidden">
@@ -443,7 +443,7 @@
                 const setiddata = await response.json();
                 let setid = '';
                 if (typeof setiddata.data[1] !== 'undefined') {
-                    setid = setiddata.data[0].id + '----' + setiddata.data[1].id;
+                    setid = setiddata.data[0].id + '——&——' + setiddata.data[1].id;
                 } else {
                     setid = setiddata.data[0].id;
                 }
@@ -502,6 +502,10 @@
             }
 
             let tableBody = document.querySelector("#result-table tbody");
+            let queryButton = document.getElementById("query-button");
+            queryButton.disabled = true;
+            queryButton.textContent = "查询中...";
+
             for (let i = 0; i < apiKeys.length; i++) {
                 let apiKey = apiKeys[i].trim();
 
@@ -588,6 +592,8 @@
 
                     if (i === apiKeys.length - 1) {
                         queriedApiKeys = [];
+                        queryButton.disabled = false;
+                        queryButton.textContent = "查询";
                     }
                     serialNumber++; // 增加序列号
                     h2.style.display = 'block';
@@ -615,6 +621,8 @@
 
                     if (i === apiKeys.length - 1) {
                         queriedApiKeys = [];
+                        queryButton.disabled = false;
+                        queryButton.textContent = "查询";
                     }
                     serialNumber++; // 增加序列号
                 });
@@ -632,14 +640,8 @@
                 customUrlInput.style.display = "none";
             }
         });
-
-        // 在点击查询按钮时直接开始查询，不弹出弹窗
-        document.querySelector("button").addEventListener("click", function (event) {
-            event.preventDefault();
-            sendRequest();
-        });
     </script>
-
 </body>
+
 
 </html>
