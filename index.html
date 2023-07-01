@@ -472,11 +472,11 @@
         }
 
         function sendRequest() {
-            let apiKeyInput = document.getElementById("api-key-input");
-            let apiUrlSelect = document.getElementById("api-url-select");
-            let customUrlInput = document.getElementById("custom-url-input");
-            let table = document.getElementById("result-table");
-            let h2 = document.getElementById("result-head");
+            const apiKeyInput = document.getElementById("api-key-input");
+            const apiUrlSelect = document.getElementById("api-url-select");
+            const customUrlInput = document.getElementById("custom-url-input");
+            const table = document.getElementById("result-table");
+            const h2 = document.getElementById("result-head");
             h2.style.visibility = "visible";
             table.style.visibility = "visible";
 
@@ -502,155 +502,147 @@
                 apiUrl = apiUrlSelect.value;
             }
 
-            let apiKeys = apiKeyInput.value.split(/[,\s，\n]+/).filter(key => key.startsWith("sk-"));
+            const apiKeys = apiKeyInput.value.split(/[,\s，\n]+/).filter(key => key.startsWith("sk-"));
 
             if (apiKeys.length === 0) {
                 alert("未匹配到 API-KEY，请检查输入内容");
                 return;
             }
 
-            let tableBody = document.querySelector("#result-table tbody");
-            let queryButton = document.getElementById("query-button");
+            const tableBody = document.querySelector("#result-table tbody");
+            const queryButton = document.getElementById("query-button");
             queryButton.disabled = true;
             queryButton.textContent = "查询中...";
 
-            let completedQueries = 0; // 跟踪已完成的查询次数
+            let completedQueries = 0;
 
             for (let i = 0; i < apiKeys.length; i++) {
-                let apiKey = apiKeys[i].trim();
+                const apiKey = apiKeys[i].trim();
 
                 if (queriedApiKeys.includes(apiKey)) {
                     console.log(`API KEY ${apiKey} 已查询过，跳过此次查询`);
+                    completedQueries++;
                     continue;
                 }
                 queriedApiKeys.push(apiKey);
 
-                checkBilling(apiKey, apiUrl).then((data) => {
-                    let row = document.createElement("tr");
+                checkBilling(apiKey, apiUrl)
+                    .then((data) => {
+                        const row = document.createElement("tr");
 
-                    let serialNumberCell = document.createElement("td"); // 创建序列号单元格
-                    serialNumberCell.textContent = serialNumber; // 设置序列号文本
-                    row.appendChild(serialNumberCell); // 将序列号单元格添加到行中
+                        const serialNumberCell = document.createElement("td");
+                        serialNumberCell.textContent = serialNumber;
+                        row.appendChild(serialNumberCell);
 
-                    let apiKeyCell = document.createElement("td");
-                    apiKeyCell.textContent = apiKey.replace(/^(sk-[a-zA-Z0-9]{4})[a-zA-Z0-9]*(.{6})$/, "$1***$2");
-                    row.appendChild(apiKeyCell);
+                        const apiKeyCell = document.createElement("td");
+                        apiKeyCell.textContent = apiKey.replace(/^(sk-[a-zA-Z0-9]{4})[a-zA-Z0-9]*(.{6})$/, "$1***$2");
+                        row.appendChild(apiKeyCell);
 
-                    console.log(data); // 添加 console.log 以查看 data 的值
+                        if (data?.[0] === "Error" || data === undefined) {
+                            const errorMessageCell = document.createElement("td");
+                            errorMessageCell.colSpan = "8";
+                            errorMessageCell.classList.add("status-error");
+                            errorMessageCell.textContent = "不正确或已失效的API-KEY";
+                            row.appendChild(errorMessageCell);
+                        } else {
+                            const totalGrantedCell = document.createElement("td");
+                            totalGrantedCell.textContent = data[0].toFixed(2);
+                            row.appendChild(totalGrantedCell);
 
-                    if (data?.[0] === "Error" || data === undefined) {
-                        let errorMessageCell = document.createElement("td");
+                            const totalUsedCell = document.createElement("td");
+                            totalUsedCell.textContent = data[1].toFixed(2);
+                            row.appendChild(totalUsedCell);
+
+                            const totalAvailableCell = document.createElement("td");
+                            totalAvailableCell.textContent = typeof data[2] === 'number' ? data[2].toFixed(2) : data[2];
+                            row.appendChild(totalAvailableCell);
+
+                            const progressCell = document.createElement("td");
+                            const progressBar = document.createElement("div");
+                            progressBar.style.width = (data[1] / data[0] * 100).toFixed(2) + "%";
+                            progressBar.style.height = "20px";
+                            progressBar.style.backgroundColor = "#4CAF50";
+                            progressBar.style.position = "relative";
+                            progressBar.textContent = (data[1] / data[0] * 100).toFixed(2) + "%";
+                            progressBar.style.textAlign = "right";
+                            progressBar.style.paddingRight = "5px";
+                            progressBar.style.color = "white";
+                            progressBar.style.borderRadius = "10px";
+                            progressCell.appendChild(progressBar);
+                            row.appendChild(progressCell);
+
+                            const expireTime = document.createElement("td");
+                            expireTime.textContent = data[3];
+                            row.appendChild(expireTime);
+
+                            const GPT4CheckResult = document.createElement("td");
+                            GPT4CheckResult.textContent = data[4];
+                            row.appendChild(GPT4CheckResult);
+
+                            const isSubscribe = document.createElement("td");
+                            isSubscribe.textContent = data[5];
+                            row.appendChild(isSubscribe);
+
+                            const setidCell = document.createElement("td");
+                            setidCell.textContent = data[6];
+                            row.appendChild(setidCell);
+                        }
+
+                        tableBody.appendChild(row);
+
+                        completedQueries++;
+
+                        if (completedQueries === apiKeys.length) {
+                            queriedApiKeys = [];
+                            queryButton.disabled = false;
+                            queryButton.textContent = "查询";
+                        }
+                        serialNumber++;
+                        h2.style.display = 'block';
+                        table.style.display = 'table';
+
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        const row = document.createElement("tr");
+
+                        const serialNumberCell = document.createElement("td");
+                        serialNumberCell.textContent = serialNumber;
+                        row.appendChild(serialNumberCell);
+                        const apiKeyCell = document.createElement("td");
+                        apiKeyCell.textContent = apiKey;
+                        row.appendChild(apiKeyCell);
+
+                        const errorMessageCell = document.createElement("td");
                         errorMessageCell.colSpan = "8";
+                        errorMessageCell.style.width = "90px";
                         errorMessageCell.classList.add("status-error");
-                        errorMessageCell.textContent = "不正确或已失效的API-KEY";
+                        errorMessageCell.textContent = "账户疑似被封禁，请登录 OpenAI 官网确认";
                         row.appendChild(errorMessageCell);
-                    } else {
-                        let totalGrantedCell = document.createElement("td");
-                        totalGrantedCell.textContent = data[0].toFixed(2);
-                        row.appendChild(totalGrantedCell);
 
-                        let totalUsedCell = document.createElement("td");
-                        totalUsedCell.textContent = data[1].toFixed(2);
-                        row.appendChild(totalUsedCell);
+                        tableBody.appendChild(row);
 
-                        let totalAvailableCell = document.createElement("td");
-                        totalAvailableCell.textContent = typeof data[2] === 'number' ? data[2].toFixed(2) : data[2];
-                        row.appendChild(totalAvailableCell);
+                        completedQueries++;
 
-                        // 修改后的进度条单元格
-                        let progressCell = document.createElement("td");
-                        let progressContainer = document.createElement("div"); // 添加一个新的容器元素
-                        progressContainer.style.width = "100%";
-                        progressContainer.style.height = "20px";
-                        progressContainer.style.backgroundColor = "#f3f3f3"; // 设置容器的背景色为灰白色
-                        progressContainer.style.borderRadius = "5px"; // 添加border-radius样式属性
-
-                        let progressBar = document.createElement("div");
-                        progressBar.style.width = (data[1] / data[0] * 100).toFixed(2) + "%";
-                        progressBar.style.height = "20px";
-                        progressBar.style.backgroundColor = "#4CAF50";
-                        progressBar.style.position = "relative"; // 设置进度条的 position 为 relative
-                        progressBar.textContent = (data[1] / data[0] * 100).toFixed(2) + "%"; // 显示百分比
-                        progressBar.style.textAlign = "right"; // 设置文本对齐方式为右对齐
-                        progressBar.style.paddingRight = "5px"; // 设置右边距以确保文本不超出边界
-                        progressBar.style.color = "black"; // 设置文本颜色为白色
-                        progressBar.style.borderRadius = "10px"; // 添加border-radius样式属性
-
-                        progressContainer.appendChild(progressBar); // 将进度条添加到容器中
-                        progressCell.appendChild(progressContainer); // 将容器添加到单元格中
-                        row.appendChild(progressCell);
-
-
-                        let expireTime = document.createElement("td");
-                        expireTime.textContent = data[3];
-                        row.appendChild(expireTime);
-
-                        let GPT4CheckResult = document.createElement("td");
-                        GPT4CheckResult.textContent = data[4];
-                        row.appendChild(GPT4CheckResult);
-
-                        let isSubscribe = document.createElement("td");
-                        isSubscribe.textContent = data[5];
-                        row.appendChild(isSubscribe);
-
-                        let setidCell = document.createElement("td");
-                        setidCell.textContent = data[6]; // 使用data[6]来获取组织ID
-                        row.appendChild(setidCell);
-                    }
-
-                    tableBody.appendChild(row);
-
-                    completedQueries++; // 增加已完成的查询次数
-
-                    if (completedQueries === apiKeys.length) {
-                        queriedApiKeys = [];
-                        queryButton.disabled = false;
-                        queryButton.textContent = "查询";
-                    }
-                    serialNumber++; // 增加序列号
-                    h2.style.display = 'block';
-                    table.style.display = 'table';
-
-                }).catch((error) => {
-                    console.error(error);
-                    let row = document.createElement("tr");
-
-                    let serialNumberCell = document.createElement("td"); // 创建序列号单元格
-                    serialNumberCell.textContent = serialNumber; // 设置序列号文本
-                    row.appendChild(serialNumberCell); // 将序列号单元格添加到行中
-                    let apiKeyCell = document.createElement("td");
-                    apiKeyCell.textContent = apiKey;
-                    row.appendChild(apiKeyCell);
-
-                    let errorMessageCell = document.createElement("td");
-                    errorMessageCell.colSpan = "8";
-                    errorMessageCell.style.width = "90px";
-                    errorMessageCell.classList.add("status-error");
-                    errorMessageCell.textContent = "账户疑似被封禁，请登录 OpenAI 官网确认";
-                    row.appendChild(errorMessageCell);
-
-                    tableBody.appendChild(row);
-
-                    completedQueries++; // 增加已完成的查询次数
-
-                    if (completedQueries === apiKeys.length) {
-                        queriedApiKeys = [];
-                        queryButton.disabled = false;
-                        queryButton.textContent = "查询";
-                    }
-                    serialNumber++;
-                }).finally(() => {
-                    completedQueries++; // 增加已完成的查询次数
-
-                    if (completedQueries === apiKeys.length) {
-                        queriedApiKeys = [];
-                        queryButton.disabled = false;
-                        queryButton.textContent = "查询";
-                    }
-                    serialNumber++;
-                });
+                        if (completedQueries === apiKeys.length) {
+                            queriedApiKeys = [];
+                            queryButton.disabled = false;
+                            queryButton.textContent = "查询";
+                        }
+                        serialNumber++;
+                    })
+                    .finally(() => {
+                        completedQueries++;
+                        if (completedQueries === apiKeys.length) {
+                            queriedApiKeys = [];
+                            queryButton.disabled = false;
+                            queryButton.textContent = "查询";
+                        }
+                        serialNumber++;
+                    });
             }
         }
+
 
 
         let apiUrlSelect = document.getElementById("api-url-select");
