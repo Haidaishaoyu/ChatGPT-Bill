@@ -514,6 +514,8 @@
             queryButton.disabled = true;
             queryButton.textContent = "查询中...";
 
+            let completedQueries = 0; // 跟踪已完成的查询次数
+
             for (let i = 0; i < apiKeys.length; i++) {
                 let apiKey = apiKeys[i].trim();
 
@@ -598,7 +600,9 @@
 
                     tableBody.appendChild(row);
 
-                    if (i === apiKeys.length - 1) {
+                    completedQueries++; // 增加已完成的查询次数
+
+                    if (completedQueries === apiKeys.length) {
                         queriedApiKeys = [];
                         queryButton.disabled = false;
                         queryButton.textContent = "查询";
@@ -627,14 +631,18 @@
 
                     tableBody.appendChild(row);
 
-                    if (i === apiKeys.length - 1) {
+                    completedQueries++; // 增加已完成的查询次数
+
+                    if (completedQueries === apiKeys.length) {
                         queriedApiKeys = [];
                         queryButton.disabled = false;
                         queryButton.textContent = "查询";
                     }
                     serialNumber++;
                 }).finally(() => {
-                    if (i === apiKeys.length - 1) {
+                    completedQueries++; // 增加已完成的查询次数
+
+                    if (completedQueries === apiKeys.length) {
                         queriedApiKeys = [];
                         queryButton.disabled = false;
                         queryButton.textContent = "查询";
@@ -643,6 +651,7 @@
                 });
             }
         }
+
 
         let apiUrlSelect = document.getElementById("api-url-select");
         let customUrlInput = document.getElementById("custom-url-input");
